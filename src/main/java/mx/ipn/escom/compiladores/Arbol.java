@@ -6,6 +6,7 @@ package mx.ipn.escom.compiladores;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import static mx.ipn.escom.compiladores.TipoToken.ASTERISCO;
 import static mx.ipn.escom.compiladores.TipoToken.DISTINCT;
 import static mx.ipn.escom.compiladores.TipoToken.IDENTIFICADOR;
@@ -18,6 +19,10 @@ public class Arbol {
         private final List<Nodo> raiz;
         public String str = "";
         public boolean xd = true;
+        Stack<Nodo> pila = new Stack();        
+        Nodo nuevaRaiz = null;
+        
+        
         public Arbol(Nodo raiz){
             this.raiz = new ArrayList<>();
             this.raiz.add(raiz);
@@ -26,175 +31,173 @@ public class Arbol {
         public Arbol(List<Nodo> raiz){
             this.raiz = raiz;
         }
+        Nodo nodoActual;
         public void recorrer(int c){
-            Token t = raiz.get(0).getValue();
-            TipoToken tt;
-            
-            if(t.tipo == TipoToken.SELECT){
-                System.out.println("-SELECT");
-                tt = TipoToken.SELECT;
-                List<Nodo> n = raiz;
+            nodoActual = raiz.get(0);
+            while(!pila.isEmpty() || nodoActual!=null){
+               if(nodoActual!=null){
+                   pila.push(nodoActual);
+                   System.out.println(nodoActual.getValue().lexema);
+                   if(nodoActual.getHijos()==null){
+                       break;
+                   }                   
+                   nodoActual = nodoActual.getHijos().get(0);
+               }
                 
-                for(int i = 0; i<=c;i++){
-                    int x = i+3;
-                    if(n.get(0).getHijos()!=null){
-                       n = n.get(0).getHijos();
-                    }
-                        t = n.get(0).getValue();
-                        
-                        switch(t.tipo){
-                            
-                            case ASTERISCO:
-                                
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.FROM&&tt == TipoToken.SELECT){
-                                            System.out.println("- Asterisco");
-                                            tt = TipoToken.ASTERISCO;
-                                            
-                                            break;
-                                    }else{
-                                        System.out.println("No corresponde a una sentencia SQL valida");
-                                        System.out.println("Error en la posición: "+x);
-                                        i = c+1;
-                                        break;
-                                    }
-                                
-                            case DISTINCT:
-                                
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.IDENTIFICADOR&&tt == TipoToken.SELECT){
-                                        
-                                        System.out.println("-DISTINCT");
-                                        tt = TipoToken.DISTINCT;
-                                        break;
-                                    }
-                                    else{
-                                        System.out.println("No corresponde a una sentencia SQL valida");
-                                        System.out.println("Error en la posición: "+x);
-                                        i=c+1;
-                                        break;
-                                    }
-                                
-                                
-                            case IDENTIFICADOR:
-                                
-                                
-                                    if(n.get(0).getHijos()!=null){
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.COMA&&(tt == TipoToken.SELECT||tt == TipoToken.FROM||tt==TipoToken.PUNTO||tt==TipoToken.DISTINCT||tt==TipoToken.COMA)){                                        
-                                        System.out.println("- ID");
-                                        tt=TipoToken.IDENTIFICADOR;
-                                        break;
-                                    }
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.PUNTO&&(tt == TipoToken.SELECT||tt == TipoToken.FROM||tt==TipoToken.COMA||tt == TipoToken.PUNTO||tt==TipoToken.DISTINCT)){
-                                        tt=TipoToken.IDENTIFICADOR;
-                                        System.out.println("-ID");
-                                        break;
-                                    }
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.FROM&&(tt == TipoToken.COMA||tt==TipoToken.PUNTO)&&xd==true){
-                                        tt=TipoToken.IDENTIFICADOR;
-                                        System.out.println("-ID");
-                                        break;
-                                    }
-                                    else{
-                                        System.out.println("Error en la posición: "+x);
-                                        System.out.println("No corresponde a una sentencia SQL valida");
-                                        i=c+1;
-                                        break;
-                                    }
-                                }
-                                    else{
-                                        System.out.println("-ID");
-                                        System.out.println("Fin del analisis");
-                                        System.out.println("Sentencia correcta");
-                                        i=c+1;
-                                        break;
-                                    }
-                                    
-                                
-                                
-                                
-                            case FROM:
-                                
-                                if(n.listIterator(0).hasNext()&&n.get(0).getHijos()!=null){
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.IDENTIFICADOR&&tt == TipoToken.ASTERISCO){
-                                        xd = false;
-                                        tt=TipoToken.FROM;
-                                        System.out.println("-FROM");
-                                        
-                                        
-                                        break;
-                                    }
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.IDENTIFICADOR&&tt==TipoToken.IDENTIFICADOR&&xd==true){
-                                        xd = false;
-                                        tt=TipoToken.FROM;
-                                        System.out.println("-FROM");
-                            
-                                        break;
-                                    
-
-                                    }
-                                else{
-                                         System.out.println("No corresponde a una sentencia SQL valida");
-                                    
-                                        System.out.println("Error en la posición: "+ x);
-                                    i=c+1;
-                                   
-                                    break;
-                                
-                                }
-                                }
-                                
-                            case COMA:
-                                
-                                //System.out.println("Soy una coma");
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.IDENTIFICADOR&&tt==TipoToken.IDENTIFICADOR){
-                                        
-                                        System.out.println("-COMA");
-                                        tt=TipoToken.COMA;
-                                        break;
-                                        
-                                       
-                                        
-                                       
-                                    }else{
-                                        System.out.println("No corresponde a una sentencia SQL valida");
-                                        int z = x-1;
-                                        System.out.println("Error en la posición: "+z);
-                                        i=c+1;
-                                        break;
-                                        
-                                    }
-                                
-                            case PUNTO:
-                                
-                                    
-                                    if(n.get(0).getHijos().get(0).getValue().tipo == TipoToken.IDENTIFICADOR&&tt==TipoToken.IDENTIFICADOR){
-                                        
-                                        System.out.println("-Punto");
-                                        tt=TipoToken.PUNTO;
-                                        break;
-                                    }else{
-                                        System.out.println("No corresponde a una sentencia SQL valida");
-                                        System.out.println("Error en la posición: "+x);
-                                        i=c+1;
-                                        break;
-                                    }
-                                
-                            
-
-                            default:
-                                System.out.println("No corresponde a una sentencia SQL valida");
-                                System.out.println("Error en la posición: "+ x);
-                                i=c+1;
-                                break;
-                                
-                        }
-                                                         
+            }
+           
+            int posicion=pila.size()-1;
+            TipoToken tt;
+            nodoActual=pila.pop();
+            Token t;
+            tt = TipoToken.IDENTIFICADOR;
+            if(nodoActual.getValue().tipo == TipoToken.IDENTIFICADOR){
+                System.out.println("-ID");
+                tt = TipoToken.IDENTIFICADOR;
+                nodoActual = nuevaRaiz;
+                for(int i = 0; i<=c; i++){
+                 if(!pila.isEmpty()){
+                     nodoActual = pila.pop();
+                 }
+                 
+                 
+                 
+                 t = nodoActual.getValue();
+                 switch(t.tipo){
+                     case IDENTIFICADOR:
+                         if((tt == TipoToken.COMA||tt==TipoToken.PUNTO)&&pila.peek().getValue().tipo==TipoToken.FROM){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.COMA)&&pila.peek().getValue().tipo==TipoToken.DISTINCT){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.FROM)&&pila.peek().getValue().tipo==TipoToken.COMA){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.COMA||tt==TipoToken.FROM)&&pila.peek().getValue().tipo==TipoToken.PUNTO){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.COMA||tt==TipoToken.PUNTO)&&pila.peek().getValue().tipo==TipoToken.SELECT){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.COMA||tt==TipoToken.PUNTO)&&pila.peek().getValue().tipo==TipoToken.COMA){
+                             System.out.println("-IDENTIFICADOR");
+                             tt=TipoToken.IDENTIFICADOR;
+                             posicion--;
+                             break;
+                         }
+                         else{
+                             System.out.println("Error en la posición: "+posicion);
+                             System.out.println("No corresponde a una sentencia SQL valida");
+                             i=c+1;
+                             break;
+                         }
+                     case ASTERISCO:
+                         if((tt == TipoToken.FROM)&&pila.peek().getValue().tipo==TipoToken.SELECT){
+                             System.out.println("-ASTERISCO");
+                             tt=TipoToken.ASTERISCO;
+                             posicion--;
+                             break;
+                         }
+                         else{
+                            System.out.println("No corresponde a una sentencia SQL valida");
+                            System.out.println("Error en la posición: "+posicion);
+                            i = c+1;
+                            break;
+                         }
+                         
+                     case DISTINCT:
+                         if((tt == TipoToken.IDENTIFICADOR)&&pila.peek().getValue().tipo==TipoToken.SELECT){
+                             System.out.println("-DISTINCT");
+                             tt=TipoToken.DISTINCT;
+                             posicion--;
+                             break;
+                         }
+                         else{
+                            System.out.println("No corresponde a una sentencia SQL valida");
+                            System.out.println("Error en la posición: "+posicion);
+                            i = c+1;
+                            break;
+                         }
+                    case FROM:
+                        int pos = posicion-1;
+                         if((tt == TipoToken.IDENTIFICADOR)&&pila.peek().getValue().tipo==TipoToken.ASTERISCO){
+                             System.out.println("-FROM");
+                             tt=TipoToken.FROM;
+                             posicion--;
+                             break;
+                         }
+                         if((tt == TipoToken.IDENTIFICADOR)&&pila.peek().getValue().tipo==TipoToken.IDENTIFICADOR){
+                             System.out.println("-FROM");
+                             tt=TipoToken.FROM;
+                             posicion--;
+                             break;
+                         }
+                         
+                         else{
+                            System.out.println("No corresponde a una sentencia SQL valida");
+                            System.out.println("Error en la posición: "+pos);
+                            i = c+1;
+                            break;
+                         }
+                    case PUNTO:
+                         if((tt == TipoToken.IDENTIFICADOR)&&pila.peek().getValue().tipo==TipoToken.IDENTIFICADOR){
+                             System.out.println("-PUNTO");
+                             tt=TipoToken.PUNTO;
+                             posicion--;
+                             break;
+                         }
+                         else{
+                            System.out.println("No corresponde a una sentencia SQL valida");
+                            System.out.println("Error en la posición: "+posicion);
+                            i = c+1;
+                            break;
+                         }
+                    case COMA:
+                         if((tt == TipoToken.IDENTIFICADOR)&&pila.peek().getValue().tipo==TipoToken.IDENTIFICADOR){
+                             System.out.println("-COMA");
+                             tt=TipoToken.COMA;
+                             posicion--;
+                             break;
+                         }
+                         else{
+                            System.out.println("No corresponde a una sentencia SQL valida");
+                            System.out.println("Error en la posición: "+posicion);
+                            i = c+1;
+                            break;
+                         }
+                    case SELECT:
+                         if(tt == TipoToken.IDENTIFICADOR||tt == TipoToken.ASTERISCO||tt==TipoToken.DISTINCT){
+                             System.out.println("-SELECT");
+                             tt=TipoToken.SELECT;
+                             posicion--;
+                             System.out.println("\nSENTENCIA SQL ACEPTADA");
+                             break;
+                         }
+                         else{
+                            i = c+1;                            
+                            break;
+                         }
+                 }
                 }
             }
-            else{
-                System.out.println("No corresponde a una sentencia SQL valida");
-                System.out.println("Error en la posicion: 1");
-            }
-        
+            
+            
     }
         
         
